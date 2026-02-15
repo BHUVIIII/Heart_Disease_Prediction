@@ -191,12 +191,12 @@ if page == "Model Evaluation":
 
         st.dataframe(df.head())
 
-        if "target" not in df.columns:
-            st.error("Dataset must contain 'target' column")
+        if "num" not in df.columns:
+            st.error("Dataset must contain 'num' column")
             st.stop()
 
-        y_true = df["target"]
-        X_input = df.drop("target", axis=1)
+        y_true = df["num"]
+        X_input = df.drop("num", axis=1)
 
         X_input = X_input[feature_columns]
 
