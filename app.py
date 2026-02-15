@@ -46,11 +46,12 @@ def load_artifacts():
     feature_columns = joblib.load("trained_models/feature_columns.pkl")
     num_cols = joblib.load("trained_models/num_columns.pkl") 
     X_test, y_test = joblib.load("trained_models/test_data.pkl")
+    encoders = joblib.load("trained_models/encoders.pkl")
 
-    return models, scaler, num_imputer, feature_columns,num_cols, X_test, y_test
+    return models, scaler, num_imputer, feature_columns,num_cols,encoders,X_test, y_test
 
 
-models, scaler, num_imputer, feature_columns,num_cols, X_test, y_test = load_artifacts()
+models, scaler, num_imputer, feature_columns,num_cols,encoders, X_test, y_test = load_artifacts()
 
 # =====================================================
 # Sidebar
@@ -197,10 +198,23 @@ if page == "Model Evaluation":
 
         y_true = df["num"]
         X_input = df.drop("num", axis=1)
-
         X_input = X_input[feature_columns]
-
         X_input[num_cols] = num_imputer.transform(X_input[num_cols])
+        
+        for col, encoder in encoders.items():
+            if col in X_input.columns:
+                
+                 # Fill missing categorical values
+                X_input[col] = X_input[col].fillna(X_input[col].mode()[0])
+                # Handle unseen categories safely
+                X_input[col] = X_input[col].apply(
+                    lambda x: x if x in encoder.classes_ else encoder.classes_[0]
+                )
+                X_input[col] = encoder.transform(X_input[col])
+
+        
+
+        X_input = X_input.astype(float)
 
         if selected_model_name in ["Logistic Regression", "KNN"]:
             X_processed = scaler.transform(X_input)
